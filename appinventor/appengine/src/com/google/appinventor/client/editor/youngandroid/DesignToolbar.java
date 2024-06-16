@@ -11,6 +11,8 @@ import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.editor.FileEditor;
 import com.google.appinventor.client.editor.ProjectEditor;
 import com.google.appinventor.client.editor.youngandroid.actions.SwitchScreenAction;
+import com.google.appinventor.client.editor.youngandroid.actions.SwitchToBlocksEditorAction;
+import com.google.appinventor.client.editor.youngandroid.actions.SwitchToFormEditorAction;
 import com.google.appinventor.client.widgets.DropDownButton;
 import com.google.appinventor.client.widgets.DropDownItem;
 import com.google.appinventor.client.widgets.Toolbar;
@@ -21,9 +23,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootPanel;
 
 import java.util.LinkedList;
 import java.util.Map;
@@ -77,7 +82,8 @@ public class DesignToolbar extends Toolbar {
       BlocklyPanel.setCurrentForm(projectId + "_" + currentScreen);
     }
 
-    // Returns true if we added the screen (it didn't previously exist), false otherwise.
+    // Returns true if we added the screen (it didn't previously exist), false
+    // otherwise.
     public boolean addScreen(String name, FileEditor formEditor, FileEditor blocksEditor) {
       if (screens.containsKey(name)) {
         return false;
@@ -110,12 +116,14 @@ public class DesignToolbar extends Toolbar {
 
   // Enum for type of view showing in the design tab
   public enum View {
-    FORM,   // Form editor view
-    BLOCKS  // Blocks editor view
+    FORM, // Form editor view
+    BLOCKS // Blocks editor view
   }
+
   public View currentView = View.FORM;
 
-  @UiField public Label projectNameLabel;
+  @UiField
+  public Label projectNameLabel;
 
   // Project currently displayed in designer
   private DesignProject currentProject;
@@ -133,16 +141,25 @@ public class DesignToolbar extends Toolbar {
   // on the device.
   public static LinkedList<String> pushedScreens = Lists.newLinkedList();
 
-  interface DesignToolbarUiBinder extends UiBinder<Toolbar, DesignToolbar> {}
+  interface DesignToolbarUiBinder extends UiBinder<Toolbar, DesignToolbar> {
+  }
+
   private static final DesignToolbarUiBinder UI_BINDER = GWT.create(DesignToolbarUiBinder.class);
 
-  @UiField DropDownButton pickFormItem;
-  @UiField ToolbarItem addFormItem;
-  @UiField ToolbarItem removeFormItem;
-  @UiField ToolbarItem switchToDesign;
-  @UiField ToolbarItem switchToBlocks;
-  @UiField ToolbarItem sendToGalleryItem;
-  @UiField ToolbarItem projectPropertiesDialog;
+  @UiField
+  DropDownButton pickFormItem;
+  @UiField
+  ToolbarItem addFormItem;
+  @UiField
+  ToolbarItem removeFormItem;
+  @UiField
+  ToolbarItem switchToDesign;
+  @UiField
+  ToolbarItem switchToBlocks;
+  @UiField
+  ToolbarItem sendToGalleryItem;
+  @UiField
+  ToolbarItem projectPropertiesDialog;
 
   /**
    * Initializes and assembles all commands into buttons in the toolbar.
@@ -162,19 +179,21 @@ public class DesignToolbar extends Toolbar {
     // Gray out the Designer button and enable the blocks button
     toggleEditor(false);
     Ode.getInstance().getTopToolbar().updateFileMenuButtons(0);
+
+    toggleView();
   }
 
   private void doSwitchScreen(final long projectId, final String screenName, final View view) {
     Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
-        @Override
-        public void execute() {
-          if (Ode.getInstance().screensLocked()) { // Wait until I/O complete
-            Scheduler.get().scheduleDeferred(this);
-          } else {
-            doSwitchScreen1(projectId, screenName, view);
-          }
+      @Override
+      public void execute() {
+        if (Ode.getInstance().screensLocked()) { // Wait until I/O complete
+          Scheduler.get().scheduleDeferred(this);
+        } else {
+          doSwitchScreen1(projectId, screenName, view);
         }
-      });
+      }
+    });
   }
 
   private void doSwitchScreen1(long projectId, String screenName, View view) {
@@ -192,7 +211,8 @@ public class DesignToolbar extends Toolbar {
     }
     String newScreenName = screenName;
     if (!currentProject.screens.containsKey(newScreenName)) {
-      // Can't find the requested screen in this project. This shouldn't happen, but if it does
+      // Can't find the requested screen in this project. This shouldn't happen, but
+      // if it does
       // for some reason, try switching to Screen1 instead.
       LOG.warning("Trying to switch to non-existent screen " + newScreenName +
           " in project " + currentProject.name + ". Trying Screen1 instead.");
@@ -214,7 +234,7 @@ public class DesignToolbar extends Toolbar {
     if (currentView == View.FORM) {
       projectEditor.selectFileEditor(screen.formEditor);
       toggleEditor(false);
-    } else {  // must be View.BLOCKS
+    } else { // must be View.BLOCKS
       projectEditor.selectFileEditor(screen.blocksEditor);
       toggleEditor(true);
     }
@@ -244,7 +264,7 @@ public class DesignToolbar extends Toolbar {
         LOG.warning("DesignToolbar: ignoring call to switchToProject for current project");
         return true;
       }
-      pushedScreens.clear();  // Effectively switching applications; clear stack of screens.
+      pushedScreens.clear(); // Effectively switching applications; clear stack of screens.
       clearDropDownMenu(WIDGET_NAME_SCREENS_DROPDOWN);
       LOG.info("DesignToolbar: switching to existing project " + projectName + " with id "
           + projectId);
@@ -256,7 +276,7 @@ public class DesignToolbar extends Toolbar {
             screen.screenName, new SwitchScreenAction(projectId, screen.screenName)));
       }
       projectNameLabel.setText(projectName);
-      YaBlocksEditor.resendAssetsAndExtensions();  // Send assets for active project
+      YaBlocksEditor.resendAssetsAndExtensions(); // Send assets for active project
     } else {
       ErrorReporter.reportError("Design toolbar doesn't know about project " + projectName +
           " with id " + projectId);
@@ -288,18 +308,18 @@ public class DesignToolbar extends Toolbar {
     }
   }
 
-/*
- * PushScreen -- Static method called by Blockly when the Companion requests
- * That we switch to a new screen. We keep track of the Screen we were on
- * and push that onto a stack of Screens which we pop when requested by the
- * Companion.
- */
+  /*
+   * PushScreen -- Static method called by Blockly when the Companion requests
+   * That we switch to a new screen. We keep track of the Screen we were on
+   * and push that onto a stack of Screens which we pop when requested by the
+   * Companion.
+   */
   public static boolean pushScreen(String screenName) {
     DesignToolbar designToolbar = Ode.getInstance().getDesignToolbar();
     long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
     String currentScreen = designToolbar.currentProject.currentScreen;
     if (!designToolbar.currentProject.screens.containsKey(screenName)) // No such screen -- can happen
-      return false;                                                    // because screen is user entered here.
+      return false; // because screen is user entered here.
     pushedScreens.addFirst(currentScreen);
     designToolbar.doSwitchScreen(projectId, screenName, View.BLOCKS);
     return true;
@@ -310,7 +330,7 @@ public class DesignToolbar extends Toolbar {
     long projectId = Ode.getInstance().getCurrentYoungAndroidProjectId();
     String newScreen;
     if (pushedScreens.isEmpty()) {
-      return;                   // Nothing to do really
+      return; // Nothing to do really
     }
     newScreen = pushedScreens.removeFirst();
     designToolbar.doSwitchScreen(projectId, newScreen, View.BLOCKS);
@@ -376,6 +396,22 @@ public class DesignToolbar extends Toolbar {
 
   public void setTutorialToggleVisible(boolean value) {
     setButtonVisible(WIDGET_NAME_TUTORIAL_TOGGLE, value);
+  }
+
+  public void toggleView() {
+    SwitchToBlocksEditorAction blockView = new SwitchToBlocksEditorAction();
+    SwitchToFormEditorAction designView = new SwitchToFormEditorAction();
+    RootPanel.get().addDomHandler(new KeyDownHandler() {
+      public void onKeyDown(KeyDownEvent event) {
+        if (event.isControlKeyDown() && event.isAltKeyDown()) {
+          if (currentView == DesignToolbar.View.FORM) {
+            blockView.execute();
+          } else if (currentView == DesignToolbar.View.BLOCKS) {
+            designView.execute();
+          }
+        }
+      }
+    }, KeyDownEvent.getType());
   }
 
 }
