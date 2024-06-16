@@ -7,6 +7,7 @@
 package com.google.appinventor.client.editor.youngandroid.palette;
 
 import com.google.appinventor.client.ComponentsTranslation;
+import com.google.appinventor.client.Ode;
 import com.google.appinventor.client.editor.simple.SimpleComponentDatabase;
 import com.google.appinventor.client.editor.simple.components.MockComponent;
 import com.google.appinventor.client.editor.simple.components.utils.PropertiesUtil;
@@ -15,6 +16,7 @@ import com.google.appinventor.client.editor.simple.palette.DropTargetProvider;
 import com.google.appinventor.client.editor.simple.palette.SimpleComponentDescriptor;
 import com.google.appinventor.client.editor.simple.palette.SimplePaletteItem;
 import com.google.appinventor.client.editor.simple.palette.SimplePalettePanel;
+import com.google.appinventor.client.editor.youngandroid.DesignToolbar;
 import com.google.appinventor.client.editor.youngandroid.YaFormEditor;
 import com.google.appinventor.client.explorer.project.ComponentDatabaseChangeListener;
 import com.google.appinventor.client.wizards.ComponentImportWizard;
@@ -28,9 +30,11 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.event.dom.client.KeyPressEvent;
@@ -44,11 +48,6 @@ import com.google.gwt.event.dom.client.KeyDownHandler;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsType;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.*;
 
 import static com.google.appinventor.client.Ode.MESSAGES;
@@ -61,7 +60,8 @@ import static com.google.appinventor.client.Ode.MESSAGES;
  */
 public class YoungAndroidPalettePanel extends Composite implements SimplePalettePanel, ComponentDatabaseChangeListener {
 
-  // Component database: information about components (including their properties and events)
+  // Component database: information about components (including their properties
+  // and events)
   private final SimpleComponentDatabase COMPONENT_DATABASE;
 
   // Associated editor
@@ -71,7 +71,8 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
 
   private final CollapsablePanel stackPalette;
   private final Map<ComponentCategory, VerticalPanel> categoryPanels;
-  // store Component Type along with SimplePaleteItem to enable removal of components
+  // store Component Type along with SimplePaleteItem to enable removal of
+  // components
   private final Map<String, SimplePaletteItem> simplePaletteItems;
 
   private DropTargetProvider dropTargetProvider;
@@ -82,12 +83,12 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
   // Map translated component names to English names
   private final Map<String, String> translationMap;
 
-  private final TextBox searchText; 
+  private final TextBox searchText;
+  private boolean isSearchTextFocused = false;
   private final VerticalPanel searchResults;
   private JsArrayString arrayString = (JsArrayString) JsArrayString.createArray();
   private String lastSearch = "";
-  private Map<String, SimplePaletteItem> searchSimplePaletteItems =
-      new HashMap<String, SimplePaletteItem>();
+  private Map<String, SimplePaletteItem> searchSimplePaletteItems = new HashMap<String, SimplePaletteItem>();
 
   @SuppressWarnings("checkstyle:LineLength")
   private native NativeArray filter(String match)/*-{
@@ -188,6 +189,7 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
       @Override
       public void onBlur(BlurEvent event) {
         doSearch();
+        isSearchTextFocused = false;
       }
     });
     searchText.addChangeHandler(new ChangeHandler() {
@@ -196,6 +198,24 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
         doSearch();
       }
     });
+
+    RootPanel.get().addDomHandler(new KeyDownHandler() {
+      @Override
+      public void onKeyDown(KeyDownEvent event) {
+        DesignToolbar designToolbar = Ode.getInstance().getDesignToolbar();
+        if (designToolbar.currentView == DesignToolbar.View.FORM) {
+          if (event.getNativeKeyCode() == 191 && !isSearchTextFocused) {
+            {
+              searchText.setFocus(true);
+              event.preventDefault();
+              isSearchTextFocused = true;
+            }
+          }
+        } else {
+          isSearchTextFocused = false;
+        }
+      }
+    }, KeyDownEvent.getType());
 
     panel.setSpacing(3);
     panel.add(searchText);
@@ -217,9 +237,8 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
         // The production version will not include a mapping for Extension because
         // only compile-time categories are included. This allows us to i18n the
         // Extension title for the palette.
-        String title = ComponentCategory.EXTENSION.equals(category) ?
-          MESSAGES.extensionComponentPallette() :
-          ComponentsTranslation.getCategoryName(category.getName());
+        String title = ComponentCategory.EXTENSION.equals(category) ? MESSAGES.extensionComponentPallette()
+            : ComponentsTranslation.getCategoryName(category.getName());
         stackPalette.add(categoryPanel, category, title);
       }
     }
@@ -227,8 +246,8 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
     initExtensionPanel();
   }
 
-   /**
-   *  Automatic search and list results as users input the string
+  /**
+   * Automatic search and list results as users input the string
    */
   private class SearchKeyUpHandler implements KeyUpHandler {
     @Override
@@ -238,7 +257,7 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
   }
 
   /**
-   *  Users press escape button, results and searchText will be cleared
+   * Users press escape button, results and searchText will be cleared
    */
   private class EscapeKeyDownHandler implements KeyDownHandler {
     @Override
@@ -251,19 +270,19 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
   }
 
   /**
-   *  Users press enter button, results will be added to searchResults panel
+   * Users press enter button, results will be added to searchResults panel
    */
   private class ReturnKeyHandler implements KeyPressHandler {
-     @Override
-      public void onKeyPress(KeyPressEvent event) {
-        switch (event.getCharCode()) {
-          case KeyCodes.KEY_END:
-          case KeyCodes.KEY_DELETE:
-          case KeyCodes.KEY_BACKSPACE:
-            doSearch();
-            break;
-        }
+    @Override
+    public void onKeyPress(KeyPressEvent event) {
+      switch (event.getCharCode()) {
+        case KeyCodes.KEY_END:
+        case KeyCodes.KEY_DELETE:
+        case KeyCodes.KEY_BACKSPACE:
+          doSearch();
+          break;
       }
+    }
   }
 
   private void doSearch() {
@@ -271,7 +290,7 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
   }
 
   /**
-   *  User clicks on searchButton and results will be added to searchResults panel
+   * User clicks on searchButton and results will be added to searchResults panel
    */
   private void doSearch(boolean force) {
     String search_str = searchText.getText().trim().toLowerCase();
@@ -303,7 +322,8 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
     if (category == ComponentCategory.UNINITIALIZED) {
       return false;
     }
-    // We should only show FUTURE components if the future feature flag is enabled...
+    // We should only show FUTURE components if the future feature flag is
+    // enabled...
     if (category == ComponentCategory.FUTURE &&
         !AppInventorFeatures.enableFutureFeatures()) {
       return false;
@@ -316,7 +336,7 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
   }
 
   /**
-   * Loads all components to be shown on this palette.  Specifically, for
+   * Loads all components to be shown on this palette. Specifically, for
    * each component (except for those whose category is UNINITIALIZED, or
    * whose category is INTERNAL and we're running on a production server,
    * or who are specifically marked as not to be shown on the palette),
@@ -349,7 +369,7 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
   }
 
   /**
-   *  Loads a single Component to Palette. Used for adding Components.
+   * Loads a single Component to Palette. Used for adding Components.
    */
   @Override
   public void addComponent(String componentTypeName) {
@@ -371,7 +391,7 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
       SimplePaletteItem item = new SimplePaletteItem(
           new SimpleComponentDescriptor(componentTypeName, editor, version, versionName, dateBuilt, helpString, helpUrl,
               categoryDocUrlString, showOnPalette, nonVisible, external),
-            dropTargetProvider);
+          dropTargetProvider);
       simplePaletteItems.put(componentTypeName, item);
       addPaletteItem(item, category);
 
@@ -427,7 +447,7 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
     // only compile-time categories are included. This allows us to i18n the
     // Extension title for the palette.
     int insert_index = Collections.binarySearch(categoryOrder, category.ordinal());
-    insert_index = - insert_index - 1;
+    insert_index = -insert_index - 1;
     String title = "";
     if (ComponentCategory.EXTENSION.equals(category)) {
       title = MESSAGES.extensionComponentPallette();
@@ -437,7 +457,8 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
     }
     stackPalette.insert(panel, category, title, insert_index);
     categoryOrder.add(insert_index, category.ordinal());
-    // When the categories are loaded, we want the first one open, which will almost always be User Interface
+    // When the categories are loaded, we want the first one open, which will almost
+    // always be User Interface
     stackPalette.show(0);
     return panel;
   }
@@ -526,7 +547,6 @@ public class YoungAndroidPalettePanel extends Composite implements SimplePalette
     categoryOrder.clear();
     simplePaletteItems.clear();
   }
-
 
   @Override
   public void reloadComponents() {

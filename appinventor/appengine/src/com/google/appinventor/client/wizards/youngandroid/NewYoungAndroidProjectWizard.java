@@ -6,7 +6,6 @@
 
 package com.google.appinventor.client.wizards.youngandroid;
 
-
 import static com.google.appinventor.client.Ode.MESSAGES;
 import static com.google.appinventor.components.common.ComponentConstants.DEFAULT_THEME;
 
@@ -25,6 +24,7 @@ import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Button;
 import com.google.appinventor.client.explorer.project.Project;
 import com.google.appinventor.client.tracking.Tracking;
@@ -43,7 +43,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 
 import java.util.logging.Logger;
 
-
 /**
  * Wizard for creating new Young Android projects.
  *
@@ -52,21 +51,32 @@ import java.util.logging.Logger;
 
 public final class NewYoungAndroidProjectWizard {
 
-  interface NewYoungAndroidProjectWizardUiBinder extends UiBinder<Dialog, NewYoungAndroidProjectWizard> {}
-  private static final NewYoungAndroidProjectWizardUiBinder UI_BINDER = GWT.create(NewYoungAndroidProjectWizardUiBinder.class);
+  interface NewYoungAndroidProjectWizardUiBinder extends UiBinder<Dialog, NewYoungAndroidProjectWizard> {
+  }
+
+  private static final NewYoungAndroidProjectWizardUiBinder UI_BINDER = GWT
+      .create(NewYoungAndroidProjectWizardUiBinder.class);
   private static final Logger LOG = Logger.getLogger(NewYoungAndroidProjectWizard.class.getName());
 
   EditableProperty theme;
   EditableProperty toolkit;
   // UI element for project name
-  @UiField Dialog addDialog;
-  @UiField Button addButton;
-  @UiField Button cancelButton;
-  @UiField LabeledTextBox projectNameTextBox;
-  @UiField(provided = true) YoungAndroidThemeChoicePropertyEditor themeEditor;
-  @UiField(provided = true) SubsetJSONPropertyEditor blockstoolkitEditor;
-  @UiField FlowPanel horizontalThemePanel;
-  @UiField FlowPanel horizontalBlocksPanel;
+  @UiField
+  Dialog addDialog;
+  @UiField
+  Button addButton;
+  @UiField
+  Button cancelButton;
+  @UiField
+  LabeledTextBox projectNameTextBox;
+  @UiField(provided = true)
+  YoungAndroidThemeChoicePropertyEditor themeEditor;
+  @UiField(provided = true)
+  SubsetJSONPropertyEditor blockstoolkitEditor;
+  @UiField
+  FlowPanel horizontalThemePanel;
+  @UiField
+  FlowPanel horizontalBlocksPanel;
 
   /**
    * Creates a new YoungAndroid project wizard.
@@ -102,6 +112,7 @@ public final class NewYoungAndroidProjectWizard {
         addButton.setEnabled(true);
         return true;
       }
+
       @Override
       public String getErrorMessage() {
         return errorMessage;
@@ -121,8 +132,17 @@ public final class NewYoungAndroidProjectWizard {
 
     projectNameTextBox.getTextBox().addKeyUpHandler(new KeyUpHandler() {
       @Override
-      public void onKeyUp(KeyUpEvent event) { //Validate the text each time a key is lifted
+      public void onKeyUp(KeyUpEvent event) { // Validate the text each time a key is lifted
         projectNameTextBox.validate();
+      }
+    });
+
+    Event.addNativePreviewHandler(new Event.NativePreviewHandler() {
+      @Override
+      public void onPreviewNativeEvent(Event.NativePreviewEvent event) {
+        if (event.getTypeInt() == Event.ONKEYDOWN && event.getNativeEvent().getKeyCode() == 191) {
+          projectNameTextBox.setFocus(true);
+        }
       }
     });
 
@@ -168,8 +188,7 @@ public final class NewYoungAndroidProjectWizard {
   public void createProject() {
     String projectName = projectNameTextBox.getText().trim();
     projectName = projectName.replaceAll("( )+", " ").replace(" ", "_");
-    if (TextValidators.checkNewProjectName(projectName)
-            == TextValidators.ProjectNameStatus.SUCCESS) {
+    if (TextValidators.checkNewProjectName(projectName) == TextValidators.ProjectNameStatus.SUCCESS) {
       String packageName = StringUtils.getProjectPackage(
           Ode.getInstance().getUser().getUserEmail(), projectName);
       NewYoungAndroidProjectParameters parameters = new NewYoungAndroidProjectParameters(

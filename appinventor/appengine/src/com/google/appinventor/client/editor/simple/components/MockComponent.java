@@ -86,7 +86,8 @@ import java.util.logging.Logger;
 /**
  * Abstract superclass for all components in the visual designer.
  *
- * <p>Since the actual component implementation are for a target platform
+ * <p>
+ * Since the actual component implementation are for a target platform
  * that is different from the platform used to implement the development
  * environment, we need to mock them.
  *
@@ -161,6 +162,14 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
       add(contentPanel);
     }
 
+    @Override
+    protected void onPreviewNativeEvent(NativePreviewEvent event) {
+      super.onPreviewNativeEvent(event);
+      if (event.getTypeInt() == Event.ONKEYDOWN && event.getNativeEvent().getKeyCode() == 191) {
+        newNameTextBox.setFocus(true);
+      }
+    }
+
     private void handleOkClick() {
       String newName = newNameTextBox.getText();
       // Remove leading and trailing whitespace
@@ -200,7 +209,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
         return false;
       }
 
-      //Check that it is not a Component type name, as this is bad for generics
+      // Check that it is not a Component type name, as this is bad for generics
       SimpleComponentDatabase COMPONENT_DATABASE = SimpleComponentDatabase.getInstance();
       if (COMPONENT_DATABASE.isComponent(newName)) {
         Window.alert(MESSAGES.sameAsComponentTypeNameError());
@@ -261,6 +270,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
 
       add(contentPanel);
     }
+
     @Override
     protected void onPreviewNativeEvent(NativePreviewEvent event) {
       super.onPreviewNativeEvent(event);
@@ -277,13 +287,15 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     }
   }
 
-  // Component database: information about components (including their properties and events)
+  // Component database: information about components (including their properties
+  // and events)
   private final SimpleComponentDatabase COMPONENT_DATABASE;
 
   // Image bundle
   protected static final Images images = Ode.getImageBundle();
 
-  // Empty component children array so that we don't have to special case and test for null in
+  // Empty component children array so that we don't have to special case and test
+  // for null in
   // case of no children
   private static final List<MockComponent> NO_CHILDREN = Collections.emptyList();
 
@@ -296,18 +308,21 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
 
   private final SourceStructureExplorerItem sourceStructureExplorerItem;
   /**
-   * The state of the branch in the components tree corresponding to this component.
+   * The state of the branch in the components tree corresponding to this
+   * component.
    */
   protected boolean expanded;
 
   // Properties of the component
   // Expose these to individual component subclasses, which might need to
-  // check properties fpr UI manipulation.  One example is MockHorizontalArrangement
+  // check properties fpr UI manipulation. One example is
+  // MockHorizontalArrangement
   protected final EditableProperties properties;
 
   private DragSourceSupport dragSourceSupport;
 
-  // Component container the component belongs to (this will be null for the root component aka the
+  // Component container the component belongs to (this will be null for the root
+  // component aka the
   // form)
   private MockContainer container;
 
@@ -317,7 +332,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Creates a new instance of the component.
    *
-   * @param editor  editor of source file the component belongs to
+   * @param editor editor of source file the component belongs to
    */
   MockComponent(SimpleEditor editor, String type, Image iconImage) {
     this.editor = editor;
@@ -332,8 +347,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
       public void onSelected(NativeEvent source) {
         // are we showing the blocks editor? if so, toggle the component drawer
         if (Ode.getInstance().getCurrentFileEditor() instanceof YaBlocksEditor) {
-          YaBlocksEditor blocksEditor =
-              (YaBlocksEditor) Ode.getInstance().getCurrentFileEditor();
+          YaBlocksEditor blocksEditor = (YaBlocksEditor) Ode.getInstance().getCurrentFileEditor();
           LOG.info("Showing item " + getName());
           blocksEditor.showComponentBlocks(getName());
         } else {
@@ -343,8 +357,10 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
 
       @Override
       public void onStateChange(boolean open) {
-        // The user has expanded or collapsed the branch in the components tree corresponding to
-        // this component. Remember that by setting the expanded field so that when we re-build
+        // The user has expanded or collapsed the branch in the components tree
+        // corresponding to
+        // this component. Remember that by setting the expanded field so that when we
+        // re-build
         // the tree, we will keep the branch in the same state.
         expanded = open;
       }
@@ -378,11 +394,13 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     // Create a default property set for the component
     properties = new EditableProperties(true);
 
-    // Add the mock component itself as a property change listener so that it can update its
+    // Add the mock component itself as a property change listener so that it can
+    // update its
     // visual aspects according to changes of its properties
     properties.addPropertyChangeListener(this);
 
-    // Allow dragging this component in a drag-and-drop action if this is not the root form
+    // Allow dragging this component in a drag-and-drop action if this is not the
+    // root form
     if (!isForm()) {
       dragSourceSupport = new DragSourceSupport(this);
       addMouseListener(dragSourceSupport);
@@ -396,12 +414,14 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Sets the components widget representation and initializes its properties.
    *
-   * <p>To be called from implementing constructor.
+   * <p>
+   * To be called from implementing constructor.
    *
-   * @param widget  components visual representation in designer
+   * @param widget components visual representation in designer
    */
   void initComponent(Widget widget) {
-    // Widget needs to be initialized before the component itself so that the component properties
+    // Widget needs to be initialized before the component itself so that the
+    // component properties
     // can be reflected by the widget
     initWidget(widget);
 
@@ -416,7 +436,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     // TODO(user): Ensure this value is unique within the project using a list of
     // already used UUIDs
     // Set the component's UUID
-    // The default value here can be anything except 0, because YoungAndroidProjectService
+    // The default value here can be anything except 0, because
+    // YoungAndroidProjectService
     // creates forms with an initial Uuid of 0, and Properties.java doesn't encode
     // default values when it generates JSON for a component.
     addProperty(PROPERTY_NAME_UUID, "-1", null, null, null, new TextPropertyEditor());
@@ -450,7 +471,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Invoked after a component is created from the palette.
    *
-   * <p>Some subclasses may wish to override this method to initialize
+   * <p>
+   * Some subclasses may wish to override this method to initialize
    * properties of the newly created component. For example, a component with a
    * caption may want to initialize the caption to match the component's name.
    */
@@ -485,9 +507,9 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     int highIndex = 0;
     if (editor != null) {
       final String typeName = ComponentsTranslation.getComponentName(getType())
-        .toLowerCase()
-        .replace(" ", "_")
-        .replace("'", "_");
+          .toLowerCase()
+          .replace(" ", "_")
+          .replace("'", "_");
       final int nameLength = typeName.length();
       for (String cName : editor.getComponentNames()) {
         cName = cName.toLowerCase();
@@ -506,10 +528,10 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Adds a new property for the component.
    *
-   * @param name  property name
-   * @param defaultValue  default value of property
-   * @param caption property's caption for use in the ui
-   * @param editor  property editor
+   * @param name         property name
+   * @param defaultValue default value of property
+   * @param caption      property's caption for use in the ui
+   * @param editor       property editor
    */
   public final void addProperty(String name, String defaultValue, String caption,
       String category, String description, PropertyEditor editor) {
@@ -530,21 +552,22 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Adds a new property for the component.
    *
-   * @param name  property name
-   * @param defaultValue  default value of property
-   * @param caption  property's caption for use in the ui
-   * @param editorType  editor type for the property
-   * @param editorArgs  additional editor arguments
-   * @param editor  property editor
+   * @param name         property name
+   * @param defaultValue default value of property
+   * @param caption      property's caption for use in the ui
+   * @param editorType   editor type for the property
+   * @param editorArgs   additional editor arguments
+   * @param editor       property editor
    */
   public final void addProperty(String name, String defaultValue, String caption, String category,
-                                String editorType, String[] editorArgs, PropertyEditor editor) {
+      String editorType, String[] editorArgs, PropertyEditor editor) {
 
     String propertyDesc = ComponentsTranslation.getPropertyDescription(name
-      + "PropertyDescriptions");
+        + "PropertyDescriptions");
     if (propertyDesc.equals(name + "PropertyDescriptions")) {
       propertyDesc = ComponentsTranslation.getPropertyDescription((type.equals("Form")
-          ? "Screen" : type) + "." + propertyDesc);
+          ? "Screen"
+          : type) + "." + propertyDesc);
     }
 
     int propertyType = EditableProperty.TYPE_NORMAL;
@@ -558,7 +581,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
       propertyType |= EditableProperty.TYPE_DOYAIL;
     }
     properties.addProperty(name, defaultValue, ComponentsTranslation.getPropertyName(caption),
-        ComponentsTranslation.getCategoryName(category),  propertyDesc, editor, propertyType, editorType, editorArgs);
+        ComponentsTranslation.getCategoryName(category), propertyDesc, editor, propertyType, editorType, editorArgs);
   }
 
   protected final void addProperty(String name) {
@@ -570,7 +593,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * <p>
    * This should not be called prior to {@link #initComponent(Widget)}.
    *
-   * @return  component name
+   * @return component name
    */
   public String getName() {
     return properties.getPropertyValue(PROPERTY_NAME_NAME);
@@ -579,8 +602,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Returns true if there is a property with the given name.
    *
-   * @param name  property name
-   * @return  true if the property exists
+   * @param name property name
+   * @return true if the property exists
    */
   public boolean hasProperty(String name) {
     return properties.getProperty(name) != null;
@@ -589,8 +612,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Returns the property's value.
    *
-   * @param name  property name
-   * @return  property value
+   * @param name property name
+   * @return property value
    */
   public String getPropertyValue(String name) {
     return properties.getPropertyValue(name);
@@ -600,7 +623,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * Changes the value of a component property.
    *
    * @param name  property name
-   * @param value  new property value
+   * @param value new property value
    */
   public void changeProperty(String name, String value) {
     properties.changePropertyValue(name, value);
@@ -608,6 +631,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
 
   /**
    * Renames the component to {@code newName}.
+   * 
    * @param newName The new name for the component.
    */
   public void rename(String newName) {
@@ -619,7 +643,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Returns the properties set for the component.
    *
-   * @return  properties
+   * @return properties
    */
   public EditableProperties getProperties() {
     return properties;
@@ -632,7 +656,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * <p>
    * The returned list should not be modified.
    *
-   * @return  children of the component
+   * @return children of the component
    */
   public List<MockComponent> getChildren() {
     return NO_CHILDREN;
@@ -681,7 +705,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Returns the form containing this component.
    *
-   * @return  containing form
+   * @return containing form
    */
   public MockForm getForm() {
     return getContainer().getForm();
@@ -696,8 +720,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * <p>
    * The return value of this method will not change upon successive invocations.
    *
-   * @return  {@code true} if there is a visible representation for the
-   *          component, otherwise {@code false}
+   * @return {@code true} if there is a visible representation for the
+   *         component, otherwise {@code false}
    */
   public abstract boolean isVisibleComponent();
 
@@ -738,7 +762,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * <p>
    * This is used in the serialization format of the component.
    *
-   * @return  component type
+   * @return component type
    */
   public final String getType() {
     return type;
@@ -748,17 +772,18 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * Returns the user-visible type name of the component.
    * By default this is the internal type string.
    *
-   * @return  component type name
+   * @return component type name
    */
   public String getVisibleTypeName() {
     return getType();
   }
 
   /**
-   * Returns the icon's image for the component (e.g. to be used on the component palette).
+   * Returns the icon's image for the component (e.g. to be used on the component
+   * palette).
    * The return value must not change between invocations.
    *
-   * @return  icon for the component
+   * @return icon for the component
    */
   public final Image getIconImage() {
     return iconImage;
@@ -767,7 +792,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Returns the unique id for the component
    *
-   * @return  uuid for the component
+   * @return uuid for the component
    */
   public final String getUuid() {
     return getPropertyValue(PROPERTY_NAME_UUID);
@@ -776,7 +801,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Sets the component container to which the component belongs.
    *
-   * @param container  owning component container for this component
+   * @param container owning component container for this component
    */
   protected void setContainer(MockContainer container) {
     this.container = container;
@@ -785,7 +810,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Returns the component container to which the component belongs.
    *
-   * @return  owning component container for this component
+   * @return owning component container for this component
    */
   public final MockContainer getContainer() {
     return container;
@@ -817,7 +842,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * Constructs a tree item for the component which will be displayed in the
    * source structure explorer.
    *
-   * @return  tree item for this component
+   * @return tree item for this component
    */
   protected TreeItem buildTree() {
     // Instantiate new tree item for this component
@@ -825,7 +850,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     // used to get HTML for the iconImage. AbstractImagePrototype requires
     // an ImageResource, which we don't necessarily have.
     TreeItem itemNode = new TreeItem(
-        new HTML("<span>" + iconImage.getElement().getString() + SafeHtmlUtils.htmlEscapeAllowEntities(getName()) + "</span>")) {
+        new HTML("<span>" + iconImage.getElement().getString() + SafeHtmlUtils.htmlEscapeAllowEntities(getName())
+            + "</span>")) {
       @Override
       protected Focusable getFocusable() {
         return nullFocusable;
@@ -836,10 +862,14 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   }
 
   /**
-   * If this component isn't a Form, and this component's type isn't already in typesAndIcons,
-   * adds this component's type name as a key to typesAndIcons, mapped to the HTML string used
-   * to display the component type's icon. Subclasses that contain components should override
+   * If this component isn't a Form, and this component's type isn't already in
+   * typesAndIcons,
+   * adds this component's type name as a key to typesAndIcons, mapped to the HTML
+   * string used
+   * to display the component type's icon. Subclasses that contain components
+   * should override
    * this to add their own info as well as that for their contained components.
+   * 
    * @param typesAndIcons
    */
   public void collectTypesAndIcons(Map<String, String> typesAndIcons) {
@@ -859,14 +889,13 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Returns the asset node with the given name.
    *
-   * @param name  asset name
-   * @return  asset node found or {@code null}
+   * @param name asset name
+   * @return asset node found or {@code null}
    */
   protected ProjectNode getAssetNode(String name) {
     Project project = Ode.getInstance().getProjectManager().getProject(editor.getProjectId());
     if (project != null) {
-      HasAssetsFolder<YoungAndroidAssetsFolder> hasAssetsFolder =
-          (YoungAndroidProjectNode) project.getRootNode();
+      HasAssetsFolder<YoungAndroidAssetsFolder> hasAssetsFolder = (YoungAndroidProjectNode) project.getRootNode();
       for (ProjectNode asset : hasAssetsFolder.getAssetsFolder().getChildren()) {
         if (asset.getName().equals(name)) {
           return asset;
@@ -912,7 +941,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    */
   @Override
   public void onBrowserEvent(Event event) {
-    if (!shouldCancel(event)) return;
+    if (!shouldCancel(event))
+      return;
     switch (event.getTypeInt()) {
       case Event.ONTOUCHSTART:
       case Event.ONTOUCHEND:
@@ -1002,8 +1032,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   @Override
   public final Widget createDragWidget(int x, int y) {
     // TODO(user): Make sure the cloned widget does NOT appear in the
-    //                    selected state, even if the original widget is in
-    //                    the selected state.
+    // selected state, even if the original widget is in
+    // the selected state.
     Widget w = new ClonedWidget(this);
     DragSourceSupport.configureDragWidgetToAppearWithCursorAt(w, x, y);
 
@@ -1033,14 +1063,17 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   }
 
   /**
-   * Returns the preferred width of the component if there was no layout restriction,
+   * Returns the preferred width of the component if there was no layout
+   * restriction,
    * including the CSS border.
    * <p>
    * Callers should be aware that most components cannot calculate their
-   * preferred size correctly until they are attached to the UI; see {@link #isAttached()}.
-   * Unattached components are liable to return {@code 0} for any query about their preferred size.
+   * preferred size correctly until they are attached to the UI; see
+   * {@link #isAttached()}.
+   * Unattached components are liable to return {@code 0} for any query about
+   * their preferred size.
    *
-   * @return  preferred width
+   * @return preferred width
    */
   // TODO(user): see getPreferredHeight()!
   public int getPreferredWidth() {
@@ -1048,18 +1081,22 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   }
 
   /**
-   * Returns the preferred height of the component if there was no layout restriction,
+   * Returns the preferred height of the component if there was no layout
+   * restriction,
    * including the CSS border.
    * <p>
    * Callers should be aware that most components cannot calculate their
-   * preferred size correctly until they are attached to the UI; see {@link #isAttached()}.
-   * Unattached components are liable to return {@code 0} for any query about their preferred size.
+   * preferred size correctly until they are attached to the UI; see
+   * {@link #isAttached()}.
+   * Unattached components are liable to return {@code 0} for any query about
+   * their preferred size.
    *
-   * @return  preferred height
+   * @return preferred height
    */
-  // TODO(user): The concept of preferred height/width is implemented completely wrong.
-  //                 Currently we are taking the default size of GWT components. This should be
-  //                 implemented to match the behavior of the Android components being mocked.
+  // TODO(user): The concept of preferred height/width is implemented completely
+  // wrong.
+  // Currently we are taking the default size of GWT components. This should be
+  // implemented to match the behavior of the Android components being mocked.
   public int getPreferredHeight() {
     return MockComponentsUtil.getPreferredHeight(this);
   }
@@ -1071,7 +1108,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     if (hasProperty(MockVisibleComponent.PROPERTY_NAME_VISIBLE)) {
       boolean visible = Boolean.parseBoolean(getPropertyValue(
           MockVisibleComponent.PROPERTY_NAME_VISIBLE));
-      // If this component's visible property is false, we need to check whether to show hidden
+      // If this component's visible property is false, we need to check whether to
+      // show hidden
       // components.
       if (!visible) {
         YaFormEditor formEditor = (YaFormEditor) editor;
@@ -1092,7 +1130,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
   /**
    * Refreshes the form.
    *
-   * <p>This method should be called whenever a property that affects the size
+   * <p>
+   * This method should be called whenever a property that affects the size
    * of the component is changed. It calls refreshForm(false) which permits
    * throttling.
    */
@@ -1131,7 +1170,8 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     if (propertyName.equals(PROPERTY_NAME_NAME)) {
       setTitle(newValue);
     } else if (getContainer() != null || isForm()) {
-      /* If we've already placed the component onto a Form (and therefore
+      /*
+       * If we've already placed the component onto a Form (and therefore
        * into a container) then call fireComponentPropertyChanged().
        * It's not really an instantiated component until its been added to
        * a container. If we don't make this test then we end up calling
@@ -1143,8 +1183,7 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     }
   }
 
-  public void onRemoved()
-  {
+  public void onRemoved() {
 
   }
 
@@ -1175,23 +1214,25 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
     };
   }
 
-  /** Upgrading MockComponent
+  /**
+   * Upgrading MockComponent
    *
-   * When extensions are upgraded, the MockComponents might need to undergo changes.
+   * When extensions are upgraded, the MockComponents might need to undergo
+   * changes.
    * These changes can be produced inside this function.
    * All subclasses overriding this method must call super.upgrade()!
    */
   public void upgrade() {
-    //Upgrade Icon
+    // Upgrade Icon
 
-    //We copy all compatible properties values
+    // We copy all compatible properties values
     List<PropertyDefinition> newProperties = COMPONENT_DATABASE.getPropertyDefinitions(this.type);
     List<PropertyDefinition> oldProperties = componentDefinition.getProperties();
     EditableProperties currentProperties = getProperties();
-    //Operations
+    // Operations
     List<String> toBeRemoved = new ArrayList<String>();
     List<String> toBeAdded = new ArrayList<String>();
-    //Plan operations
+    // Plan operations
     for (EditableProperty property : currentProperties) {
       boolean presentInNewProperties = false;
       boolean presentInOldProperties = false;
@@ -1225,13 +1266,13 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
         }
       }
     }
-    //New property
+    // New property
     for (PropertyDefinition property : newProperties) {
       if (!toBeAdded.contains(property.getName()) && !currentProperties.hasProperty(property.getName())) {
         toBeAdded.add(property.getName());
       }
     }
-    //Execute operations
+    // Execute operations
     for (String prop : toBeRemoved) {
       currentProperties.removeProperty(prop);
     }
@@ -1255,14 +1296,14 @@ public abstract class MockComponent extends Composite implements PropertyChangeL
    * All subclasses overriding this method must call super.upgradeComplete()!
    */
   public void upgradeComplete() {
-    this.componentDefinition = COMPONENT_DATABASE.getComponentDefinition(this.type); //Update ComponentDefinition
+    this.componentDefinition = COMPONENT_DATABASE.getComponentDefinition(this.type); // Update ComponentDefinition
   }
 
   /**
    * Hides or shows the specified property of the Component.
    *
-   * @param property  Property key
-   * @param show  will show the property if set to true, will hide it otherwise
+   * @param property Property key
+   * @param show     will show the property if set to true, will hide it otherwise
    */
   protected void showProperty(String property, boolean show) {
     // Get the current type flags of the Property
