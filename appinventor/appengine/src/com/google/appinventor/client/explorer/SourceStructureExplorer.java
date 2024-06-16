@@ -111,11 +111,11 @@ public class SourceStructureExplorer extends Composite {
           if (userObject instanceof SourceStructureExplorerItem) {
             SourceStructureExplorerItem item = (SourceStructureExplorerItem) userObject;
             enableButtons(item);
-            //showBlocks(item);
+            // showBlocks(item);
             item.onSelected(tree.lastEvent);
           } else {
             disableButtons();
-            //hideComponent();
+            // hideComponent();
           }
         } else {
           disableButtons();
@@ -130,13 +130,22 @@ public class SourceStructureExplorer extends Composite {
         if (keyCode == KeyCodes.KEY_DELETE || keyCode == KeyCodes.KEY_BACKSPACE) {
           event.preventDefault();
           deleteItemFromTree();
+        } else if (keyCode == KeyCodes.KEY_N && event.isAltKeyDown()) {
+          TreeItem treeItem = tree.getSelectedItem();
+          if (treeItem != null) {
+            Object userObject = treeItem.getUserObject();
+            if (userObject instanceof SourceStructureExplorerItem) {
+              SourceStructureExplorerItem item = (SourceStructureExplorerItem) userObject;
+              item.rename();
+            }
+          }
         }
       }
     });
 
     // Put a ScrollPanel around the tree.
     ScrollPanel scrollPanel = new ScrollPanel(tree);
-    scrollPanel.setWidth("200px");  // wide enough to avoid a horizontal scrollbar most of the time
+    scrollPanel.setWidth("200px"); // wide enough to avoid a horizontal scrollbar most of the time
     scrollPanel.setHeight("480px"); // approximately the same height as the viewer
 
     HorizontalPanel buttonPanel = new HorizontalPanel();
@@ -180,7 +189,7 @@ public class SourceStructureExplorer extends Composite {
     initWidget(panel);
   }
 
-  public void setStyleName (String styleName){
+  public void setStyleName(String styleName) {
     setStylePrimaryName(styleName);
   }
 
@@ -205,31 +214,31 @@ public class SourceStructureExplorer extends Composite {
     deleteButton.setEnabled(false);
   }
 
-  
-  /* move this logic to declarations of SourceStructureExplorerItem subtypes
-  private void showBlocks(SourceStructureExplorerItem item) {
-    // are we showing the blocks editor?
-    if (Ode.getInstance().getCurrentFileEditor() instanceof YaBlocksEditor) {
-      YaBlocksEditor editor = 
-          (YaBlocksEditor) Ode.getInstance().getCurrentFileEditor();
-      OdeLog.log("Showing item " + item.getItemName());
-      if (item.isComponent()) {
-        editor.showComponentBlocks(item.getItemName());
-      } else {
-        editor.showBuiltinBlocks(item.getItemName());
-      }
-    }
-  }
-
-  private void hideComponent() {
-    if (Ode.getInstance().getCurrentFileEditor() instanceof YaBlocksEditor) {
-      YaBlocksEditor editor =
-          (YaBlocksEditor) Ode.getInstance().getCurrentFileEditor();
-      OdeLog.log("Hiding selected item");
-      editor.hideComponentBlocks();
-    }  
-  }
-   */  
+  /*
+   * move this logic to declarations of SourceStructureExplorerItem subtypes
+   * private void showBlocks(SourceStructureExplorerItem item) {
+   * // are we showing the blocks editor?
+   * if (Ode.getInstance().getCurrentFileEditor() instanceof YaBlocksEditor) {
+   * YaBlocksEditor editor =
+   * (YaBlocksEditor) Ode.getInstance().getCurrentFileEditor();
+   * OdeLog.log("Showing item " + item.getItemName());
+   * if (item.isComponent()) {
+   * editor.showComponentBlocks(item.getItemName());
+   * } else {
+   * editor.showBuiltinBlocks(item.getItemName());
+   * }
+   * }
+   * }
+   * 
+   * private void hideComponent() {
+   * if (Ode.getInstance().getCurrentFileEditor() instanceof YaBlocksEditor) {
+   * YaBlocksEditor editor =
+   * (YaBlocksEditor) Ode.getInstance().getCurrentFileEditor();
+   * OdeLog.log("Hiding selected item");
+   * editor.hideComponentBlocks();
+   * }
+   * }
+   */
 
   /**
    * Clears the tree.
@@ -242,7 +251,7 @@ public class SourceStructureExplorer extends Composite {
   /**
    * Updates the tree
    *
-   * @param root the new root TreeItem
+   * @param root         the new root TreeItem
    * @param itemToSelect item to select, or null for no selected item
    */
   public void updateTree(TreeItem root, SourceStructureExplorerItem itemToSelect) {
@@ -251,11 +260,10 @@ public class SourceStructureExplorer extends Composite {
     updateTree(items, itemToSelect);
   }
 
-  
   /**
    * Updates the tree
    *
-   * @param roots An array of root items (all top level)
+   * @param roots        An array of root items (all top level)
    * @param itemToSelect item to select, or null for no selected item
    */
   public void updateTree(TreeItem[] roots, SourceStructureExplorerItem itemToSelect) {
@@ -273,7 +281,7 @@ public class SourceStructureExplorer extends Composite {
   /**
    * Select or unselect an item in the tree
    *
-   * @param item to select or unselect
+   * @param item   to select or unselect
    * @param select true to select, false to unselect
    */
   private void selectItem(SourceStructureExplorerItem item, boolean select) {
@@ -281,17 +289,19 @@ public class SourceStructureExplorer extends Composite {
     while (iter.hasNext()) {
       TreeItem treeItem = iter.next();
       if (item.equals(treeItem.getUserObject())) {
-        // NOTE(lizlooney) - It turns out that calling TreeItem.setSelected(true) doesn't actually
-        // select the item in the tree. It looks selected, but Tree.getSelectedItem() will return
+        // NOTE(lizlooney) - It turns out that calling TreeItem.setSelected(true)
+        // doesn't actually
+        // select the item in the tree. It looks selected, but Tree.getSelectedItem()
+        // will return
         // null. Instead, we have to call Tree.setSelectedItem.
         if (select) {
           tree.setSelectedItem(treeItem, false); // false means don't trigger a SelectionEvent
           enableButtons(item);
-          //showBlocks(item);
+          // showBlocks(item);
         } else {
           tree.setSelectedItem(null, false); // false means don't trigger a SelectionEvent
           disableButtons();
-          //hideComponent();
+          // hideComponent();
         }
         break;
       }
