@@ -62,6 +62,8 @@ Blockly.Backpack = function(targetWorkspace, opt_options) {
   // already fetched backpack contents even when using a shared backpack
   // this is used by addAllToBackpack()
   this.NoAsync_ = false;
+
+  document.addEventListener('keydown', this.openBackpackWithShortcutKey.bind(this));
 };
 
 /**
@@ -484,6 +486,33 @@ Blockly.Backpack.prototype.openBackpack = function(e) {
       p.flyout_.show(newBackpack);
     });
   }
+};
+
+/**
+ * On ALT+B, open backpack and view flyout
+ *
+ * @param {?KeyboardEvent} e keydown event if the backpack is being opened in
+ * response to a user action.
+ */
+Blockly.Backpack.prototype.openBackpackWithShortcutKey = function(e) {
+
+  if(e.altKey && e.key === 'b' && isBlockEditorActive(e))
+  {
+    if (!this.isAdded && this.flyout_.isVisible()) {
+      this.flyout_.hide();
+    } else {
+      var p = this;
+      this.getContents(function(backpack) {
+        var len = backpack.length;
+        var newBackpack = [];
+        for (var i = 0; i < len; i++) {
+          newBackpack[i] = Blockly.Versioning.upgradeComponentMethods(Blockly.Xml.textToDom(backpack[i]).firstChild);
+        }
+        Blockly.hideChaff();
+        p.flyout_.show(newBackpack);
+      });
+    }
+  } 
 };
 
 /**

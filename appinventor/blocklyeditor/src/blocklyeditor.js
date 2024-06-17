@@ -139,6 +139,26 @@ function unboundVariableHandler(myBlock, yailText) {
   }
 }
 
+function isBlockEditorActive(e) {
+  var target = null;
+
+  if (e.target.tagName.toLowerCase() == 'div' && e.target.className == 'injectionDiv') {
+    target = e.target;
+  } else {
+    var parent = e.target;
+    while (parent.parentNode && !(parent.tagName.toLowerCase() == 'div' && parent.className == 'injectionDiv')) {
+      parent = parent.parentNode;
+    }
+    target = parent;
+  }
+
+  if (Blockly.mainWorkspace.getParentSvg().parentNode == target) {
+    return true;
+  }
+  
+  return false;
+}
+
 /**
  * Adds an option to the block's context menu to export it to a PNG.
  * @param {!Blockly.BlockSvg} myBlock The block to export to PNG.
@@ -615,3 +635,50 @@ top.document.addEventListener('mousedown', function(e) {
     Blockly.hideChaff();
   }
 }, false);
+
+document.addEventListener('keydown', function(e) {
+  var selectedBlock = Blockly.selected;
+    if (e.altKey && e.key.toLowerCase() === 'o') {
+      e.preventDefault();
+        if(selectedBlock.isCollapsed()) {
+          selectedBlock.setCollapsed(false);
+        } else {
+          selectedBlock.setCollapsed(true);
+        }
+    }
+  
+    else if(e.altKey && e.key.toLowerCase() === 'i'){
+      e.preventDefault();
+      selectedBlock.setInputsInline(!selectedBlock.getInputsInline());
+    }
+  
+    else if(e.altKey && e.key.toLowerCase() === 'k' && !selectedBlock.isCollapsed()){
+      e.preventDefault();
+        if(selectedBlock.comment && !selectedBlock.isCollapsed()) {
+            if(selectedBlock.comment.isVisible()){
+                selectedBlock.comment.setVisible(false);
+              } else {
+                selectedBlock.comment.setVisible(true);
+              }
+          } else {
+            selectedBlock.setCommentText('');
+            selectedBlock.comment.setVisible(true);
+          }
+    }
+    
+    else if(e.altKey && e.key === '+'){
+      e.preventDefault();
+      Blockly.getMainWorkspace().zoomCenter(1);
+    }
+
+    else if(e.altKey && e.key === '-'){
+      e.preventDefault();
+      Blockly.getMainWorkspace().zoomCenter(-1);
+    }
+
+    else if(e.altKey && e.key.toLowerCase() === 'g'){
+      e.preventDefault();
+      Blockly.getMainWorkspace().setScale(Blockly.getMainWorkspace().options.zoomOptions.startScale);
+      Blockly.getMainWorkspace().scrollCenter();
+    }
+});      
